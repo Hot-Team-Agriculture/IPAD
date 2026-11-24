@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  color: #1a1a1a;
+  font-synthesis: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body { min-width: 320px; min-height: 100%; }
+body { overscroll-behavior: none; }
+.viewport {
+  position: relative;
+  isolation: isolate;
+  height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow: hidden;
+}
+
+.exhibition {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  height: 100%;
+  padding: 92px 30px 32px;
+}
+.background {
+  z-index: -1;
+  background: url('/assets/pattern.png') center / cover;
+}
+.background::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #d5e7fa 0%, #e2ecf8ed 12%, #f2f2f7cc 29%, #f2f2f700 44%, #f2f2f700 80%, #f2f2f7 100%);
+}
+.heading { position: relative; flex-shrink: 0; width: min(512.5px, 90%); margin: 0 auto; }
+.heading img { display: block; width: 100%; height: auto; }
+.stages { position: relative; flex: 1; min-height: 0; width: 100%; }
+.stage {
+  appearance: none;
+  padding: 0;
+  border: 2px solid #f2f2f7;
+  border-radius: 24px;
+  background: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.is-ready .stage { transition: border-color 220ms ease, box-shadow 220ms ease; }
+.stage[aria-pressed="true"] { border-color: #0088ff; }
+.stage:focus-visible { outline: 3px solid #0088ff; outline-offset: 5px; }
+.stage:active { box-shadow: inset 0 0 0 2px #0088ff30; }
+.current-stage {
+  height: 32px;
+  padding: 8px 16px;
+  z-index: 3;
+  background: #0088ff;
+  color: white;
+  font-size: 12px;
+  font-weight: 860;
+  line-height: 16px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0;
+}
+.is-ready .current-stage { transition: opacity 220ms ease; }
+.stage[aria-pressed="true"] .current-stage { opacity: 1; }
+.stage-heading { position: absolute; top: 48px; left: 16px; right: 16px; }
+.stage-name { font-size: clamp(20px, 2.314vw, 32px); line-height: 34px; letter-spacing: .38px; white-space: nowrap; }
+.week {
+  margin-top: 8px;
+  padding: 7px 8px;
+  border: 1px solid #f2f2f7;
+  font-size: 13px;
+  line-height: 13px;
+  letter-spacing: .06px;
+}
+.crop-photo {
+  top: -11px;
+  left: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% - 137px);
+  max-width: none;
+  z-index: -1;
+}
+.seedling-photo { top: 33px; height: calc(100% - 181px); }
+.watering {
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  height: 106px;
+  padding: 16px;
+  background: #eaf4fe;
+}
+.faucet { width: 33px; height: 31px; left: 9px; top: -20px; }
+.plan-label { color: #3c3c4399; font-size: 12px; line-height: 22px; }
+.plan { color: #000; margin-top: 8px; font-size: clamp(14px, 1.488vw, 20px); line-height: 22px; letter-spacing: -.43px; }
+.brand { position: static; flex-shrink: 0; width: 120.48px; height: 32px; margin: 0 auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+
+/* Portrait keeps readable touch targets; landscape follows the five-card design. */
+@media (orientation: portrait) and (max-width: 1000px) {
+  .viewport { height: auto; min-height: 100dvh; overflow: visible; }
+  .exhibition { height: auto; min-height: 100dvh; padding: 92px 24px 32px; }
+  .background { background-size: cover; }
+  .heading { position: relative; top: auto; left: auto; width: min(512.5px, 95%); margin: 0 auto; transform: none; }
+  .stages { position: relative; top: auto; left: auto; width: 100%; height: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .stage { height: 500px; }
+  .stage-name { font-size: clamp(20px, 3.4vw, 28px); }
+  .crop-photo { left: 50%; transform: translateX(-50%); width: 100%; height: 370px; object-fit: cover; }
+  .seedling-photo { height: 326px; }
+  .watering { left: 16px; right: 16px; }
+  .brand { position: relative; display: block; left: auto; top: auto; transform: none; margin: 0 auto; }
+}

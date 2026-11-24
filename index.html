@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f2f2f7" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="description" content="Explore Sawir’s crop stages and watering plans." />
+    <link rel="icon" href="/assets/logo.png" />
+    <title>Crop Stages · Sawir</title>
+  </head>
+  <body class="m-0 bg-[#f2f2f7] antialiased">
+    <div class="viewport flex items-center justify-center">
+      <div class="background pointer-events-none absolute inset-0" aria-hidden="true"></div>
+      <main class="exhibition relative isolate shrink-0 overflow-hidden" aria-labelledby="page-title">
+        <h1 id="page-title" class="heading absolute m-0">
+          <span class="sr-only">Select Crop Stage</span>
+          <img src="/assets/heading.png" alt="" width="1025" height="152" draggable="false" />
+        </h1>
+
+        <div class="stages absolute grid grid-cols-5 gap-3" role="group" aria-label="Crop stage">
+          <button class="stage relative isolate overflow-hidden text-center" type="button" data-stage="seedling" aria-pressed="true">
+            <span class="current-stage absolute inset-x-0 top-0" aria-hidden="true">Current Stage</span>
+            <img class="crop-photo seedling-photo pointer-events-none absolute" src="/assets/seedling.png" alt="Young rice seedlings growing in a flooded field" width="439" height="740" draggable="false" />
+            <span class="stage-heading relative z-10 block">
+              <span class="stage-name block font-bold">Seedling</span>
+              <span class="week inline-flex items-center justify-center rounded-full bg-white font-semibold">Week 1 - 2</span>
+            </span>
+            <span class="watering absolute block rounded-2xl">
+              <img class="faucet absolute" src="/assets/faucet.png" alt="" width="66" height="62" draggable="false" />
+              <span class="plan-label block font-semibold uppercase">Watering plan</span>
+              <span class="plan block font-bold">Keep Ponded</span>
+            </span>
+          </button>
+
+          <button class="stage relative isolate overflow-hidden text-center" type="button" data-stage="vegetative" aria-pressed="false">
+            <span class="current-stage absolute inset-x-0 top-0" aria-hidden="true">Current Stage</span>
+            <img class="crop-photo pointer-events-none absolute" src="/assets/vegetative.png" alt="Lush green rice plants during vegetative growth" width="440" height="808" draggable="false" />
+            <span class="stage-heading relative z-10 block">
+              <span class="stage-name block font-bold">Vegetative</span>
+              <span class="week inline-flex items-center justify-center rounded-full bg-white font-semibold">Week 3 -7</span>
+            </span>
+            <span class="watering absolute block rounded-2xl">
+              <img class="faucet absolute" src="/assets/faucet.png" alt="" width="66" height="62" draggable="false" />
+              <span class="plan-label block font-semibold uppercase">Watering plan</span>
+              <span class="plan block font-bold">Fill to +5cm<br />Refill at -15cm</span>
+            </span>
+          </button>
+
+          <button class="stage relative isolate overflow-hidden text-center" type="button" data-stage="reproductive" aria-pressed="false">
+            <span class="current-stage absolute inset-x-0 top-0" aria-hidden="true">Current Stage</span>
+            <img class="crop-photo pointer-events-none absolute" src="/assets/reproductive.png" alt="Green rice plants forming grain heads" width="440" height="808" draggable="false" />
+            <span class="stage-heading relative z-10 block">
+              <span class="stage-name block font-bold">Reproductive</span>
+              <span class="week inline-flex items-center justify-center rounded-full bg-white font-semibold">Week 8 - 10</span>
+            </span>
+            <span class="watering absolute block rounded-2xl">
+              <img class="faucet absolute" src="/assets/faucet.png" alt="" width="66" height="62" draggable="false" />
+              <span class="plan-label block font-semibold uppercase">Watering plan</span>
+              <span class="plan block font-bold">Keep Ponded</span>
+            </span>
+          </button>
+
+          <button class="stage relative isolate overflow-hidden text-center" type="button" data-stage="ripening" aria-pressed="false">
+            <span class="current-stage absolute inset-x-0 top-0" aria-hidden="true">Current Stage</span>
+            <img class="crop-photo pointer-events-none absolute" src="/assets/ripening.png" alt="Rice grains beginning to turn golden" width="440" height="808" draggable="false" />
+            <span class="stage-heading relative z-10 block">
+              <span class="stage-name block font-bold">Ripening</span>
+              <span class="week inline-flex items-center justify-center rounded-full bg-white font-semibold">Week 11</span>
+            </span>
+            <span class="watering absolute block rounded-2xl">
+              <img class="faucet absolute" src="/assets/faucet.png" alt="" width="66" height="62" draggable="false" />
+              <span class="plan-label block font-semibold uppercase">Watering plan</span>
+              <span class="plan block font-bold">Fill to +5cm<br />Refill at -15cm</span>
+            </span>
+          </button>
+
+          <button class="stage relative isolate overflow-hidden text-center" type="button" data-stage="ripe" aria-pressed="false">
+            <span class="current-stage absolute inset-x-0 top-0" aria-hidden="true">Current Stage</span>
+            <img class="crop-photo pointer-events-none absolute" src="/assets/ripe.png" alt="Fully ripe golden rice ready for harvest" width="440" height="808" draggable="false" />
+            <span class="stage-heading relative z-10 block">
+              <span class="stage-name block font-bold">Ripe</span>
+              <span class="week inline-flex items-center justify-center rounded-full bg-white font-semibold">Week 12 - 13</span>
+            </span>
+            <span class="watering absolute block rounded-2xl">
+              <img class="faucet absolute" src="/assets/faucet.png" alt="" width="66" height="62" draggable="false" />
+              <span class="plan-label block font-semibold uppercase">Watering plan</span>
+              <span class="plan block font-bold">Dry</span>
+            </span>
+          </button>
+        </div>
+
+        <img class="brand absolute" src="/assets/logo.png" alt="Sawir" width="241" height="64" draggable="false" />
+        <p class="sr-only" role="status" id="stage-announcement"></p>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
