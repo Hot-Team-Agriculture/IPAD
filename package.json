@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "start": "node server.mjs",
-    "test:server": "node --test server-tests/control.test.mjs",
+    "test:server": "node --test server-tests/control.test.mjs server-tests/vercel.test.mjs",
     "test": "playwright test"
   },
   "devDependencies": {
