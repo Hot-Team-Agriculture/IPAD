@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/control.mjs": {
+      "includeFiles": "dist/index.html",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/api/control?route=page" },
+    { "source": "/api/exhibition/state", "destination": "/api/control?route=state" },
+    { "source": "/api/exhibition/stage", "destination": "/api/control?route=stage" }
+  ]
+}

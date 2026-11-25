@@ -9,7 +9,7 @@ const stages = new Set(Object.values(stageCodes));
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
-export function createExhibitionServer({ backendURL, plotID, ownerToken, operatorPassword, directory = new URL('./dist/', import.meta.url) } = {}) {
+export function createExhibitionHandler({ backendURL, plotID, ownerToken, operatorPassword, directory = new URL('./dist/', import.meta.url) } = {}) {
   const upstream = backendURL ? new URL(backendURL) : null;
   if (upstream && (!['http:', 'https:'].includes(upstream.protocol) || upstream.username || upstream.password || upstream.pathname !== '/' || upstream.search || upstream.hash)) {
     throw new Error('IPAD_BACKEND_URL must be a backend origin without credentials or a path.');
@@ -45,7 +45,7 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
   async function state() {
     const water = await api('plots/' + plotID + '/water-level');
     const cycle = water.crop_cycle;
-    const stage = water.crop_stage?.stage_code ?? cycle?.applied_stage_code ?? cycle?.manual_stage_code;
+    const stage = water.crop_stage?.code ?? water.crop_stage?.stage_code ?? cycle?.applied_stage_code ?? cycle?.manual_stage_code;
     if (!cycle || cycle.plot_id !== plotID || !uuid.test(cycle.id) || cycle.ended_at != null) {
       throw Object.assign(new Error('The table plot needs an active season before changing stages.'), { status: 409 });
     }
@@ -53,7 +53,7 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
     return { plot_id: plotID, cycle_id: cycle.id, stage_code: stage };
   }
 
-  return createServer(async (req, res) => {
+  return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
@@ -80,15 +80,23 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
             return json(res, 403, { error: 'Open the exhibition page directly.' });
           }
           if (req.headers['content-type']?.split(';')[0].trim() !== 'application/json') return json(res, 415, { error: 'A JSON stage is required.' });
-          const chunks = [];
-          let length = 0;
-          for await (const chunk of req) {
-            length += chunk.length;
-            if (length > 1024) return json(res, 413, { error: 'Request too large.' });
-            chunks.push(chunk);
+          let raw;
+          if (req.body !== undefined) {
+            // Vercel parses JSON before invoking the function.
+            raw = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+          } else {
+            const chunks = [];
+            let length = 0;
+            for await (const chunk of req) {
+              length += chunk.length;
+              if (length > 1024) return json(res, 413, { error: 'Request too large.' });
+              chunks.push(chunk);
+            }
+            raw = Buffer.concat(chunks).toString('utf8');
           }
+          if (Buffer.byteLength(raw) > 1024) return json(res, 413, { error: 'Request too large.' });
           let body;
-          try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+          try { body = JSON.parse(raw); }
           catch { return json(res, 400, { error: 'Invalid JSON.' }); }
           if (!body || Object.keys(body).length !== 1 || !stages.has(body.stage_code)) return json(res, 400, { error: 'Select one of the five crop stages.' });
           const current = await state();
@@ -113,7 +121,11 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
     } catch (error) {
       json(res, error.status ?? 502, { error: error.status ? error.message : 'The backend did not confirm the stage. Check the connection and try again.' });
     }
-  });
+  };
+}
+
+export function createExhibitionServer(options) {
+  return createServer(createExhibitionHandler(options));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

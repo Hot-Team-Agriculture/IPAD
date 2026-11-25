@@ -30,9 +30,17 @@ The `dist` folder is the deployable static website. All photos, styling, icons a
 
 ## Connected exhibition control
 
-Current status: the connected mode is implemented and can be verified against an HTTP test backend. On 25 November 2026 the table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) exists on the deployed main backend with a paired AWD sensor and gate, but no active season. The bridge defaults to this plot. Live table control is not commissioned yet.
+Current status: the connected mode is implemented. Table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) has paired AWD/gate devices and active season `80a8cf85-6e16-4c9b-b7fa-b33bfca614ea`, started on 25 November 2026. The bridge defaults to this plot and resolves its current season from the backend. Local authenticated connectivity is verified. The Vercel adapter is tested locally; production deployment is pending Vercel sign-in.
 
 Start the table plot's season and configure its owner's session on the server before using connected mode. `IPAD_PLOT_ID` can override the default table plot when needed; no page or design changes are required. Leave the owner session server-side rather than hardcoding it in the browser.
+
+### Deploy to Vercel
+
+The Vercel build serves the same design through `api/control.mjs`, which reuses the local bridge handler. `vercel.json` routes `/` and the two stage API paths to that function; assets remain static. The page is marked as connected at request time. Vercel's parsed JSON bodies and ordinary Node request streams are both supported.
+
+Set production variables `IPAD_BACKEND_URL`, `IPAD_OWNER_SESSION_TOKEN`, and `IPAD_OPERATOR_PASSWORD` in the existing Vercel project. `IPAD_PLOT_ID` is optional. The native browser login uses username `exhibition` and the configured operator password. Requests fail closed if operator access is not configured. No credential uses a `VITE_` prefix or enters the client bundle.
+
+Link the existing project with the Vercel CLI, add its server-side variables, then run `vercel deploy --prod`. An existing static-only deployment cannot call the backend until this function is deployed. Use an HTTPS backend origin for encrypted server-to-backend transport; an HTTPS Vercel URL does not encrypt requests to an HTTP backend origin. A temporary owner session must be replaced when it expires.
 
 The static `npm run dev` and `npm run preview` modes retain local-only selection. To control the table, build the same page and run the stage bridge:
 

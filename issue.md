@@ -1,30 +1,32 @@
-# Connect the iPad stage cards to the table plot
+# Run the connected iPad stage controls on Vercel
 
 ## Background and previous behavior
 
-The exhibition operator needs the existing five cards to change the table plot's crop stage through the Go backend. Previously `src/main.js` changed only browser selection and reset on reload. The owner asked to prepare wiring now and configure the plot ID after registration, without changing the design.
+The owner deployed the merged iPad app to Vercel, but its page remained a static preview and `/api/exhibition/state` returned 404. The Node bridge was working locally; Vercel had no function entry point or route mapping to run it.
 
 ## Implemented changes
 
-1. `server.mjs` serves the built page and forwards requests for one configured plot. The owner's session remains server-side. Network access requires an operator password.
-2. The page reads the current stage, serializes changes, and selects a card only after backend confirmation. It refreshes every five seconds while visible and restores selection on reload.
-3. `src/stages.js` maps the existing cards to `seedling`, `vegetative`, `flowering`, `grain_fill`, and `drain`. No markup, artwork, or CSS changes.
+1. Extract the existing request handler and reuse it in the local HTTP server and `api/control.mjs`. Backend ownership, confirmation, authentication and error behavior remain shared.
+2. Route the hosted page and two stage endpoints to the function in `vercel.json`; include the built HTML. Connected mode is injected at request time and the native operator login protects the page/API. Assets remain static.
+3. Accept Vercel-parsed JSON alongside raw Node streams while preserving the 1 KiB limit and canonical-stage validation. Read the deployed backend's `crop_stage.code`, with existing fallback compatibility.
+4. Ignore `.vercel/` and environment files to keep credentials out of source control. No markup, CSS, artwork or dependencies changed.
 
 ## Contract and configuration
 
-Browser `PATCH /api/exhibition/stage` with `{"stage_code":"flowering"}` → authenticated backend `PATCH /api/v1/crop-cycles/{cycle_id}` with `{"manual_stage_code":"flowering"}`. The cycle is derived from `GET /api/v1/plots/{plot_id}/water-level`; it must belong to the configured plot and remain open. A second read confirms the applied stage.
-
-Set `IPAD_BACKEND_URL`, `IPAD_PLOT_ID`, and `IPAD_OWNER_SESSION_TOKEN` on the server. Network access additionally needs `IPAD_OPERATOR_PASSWORD`, `IPAD_HOST`, and HTTPS or an encrypted access path. Run `npm ci`, `npm run build`, then `npm start`. Static Vite dev/preview remains local-only.
+Browser GET `/api/exhibition/state` and PATCH `/api/exhibition/stage` still use the existing owner-authenticated fixed-plot bridge. Production requires server-side `IPAD_BACKEND_URL`, `IPAD_OWNER_SESSION_TOKEN`, and `IPAD_OPERATOR_PASSWORD`; `IPAD_PLOT_ID` is an optional override. Use operator username `exhibition`. An HTTPS backend origin encrypts the upstream hop; the current provided origin is HTTP.
 
 ## Time-complexity check
 
-No N+1, pagination, or unbounded collection issue identified. Selection scans five fixed cards. Each stage change makes at most three sequential backend requests (read, patch, confirm); each poll makes one read. Browser requests do not overlap. Request bodies are capped at 1 KiB.
+No new unbounded loops, N+1 queries or pagination. Three fixed routes, at most three upstream calls per stage change, one per state read, fixed five-card UI, and bounded request parsing.
 
-## Verification and rollout
+## Verification
 
-- Server HTTP tests cover all mappings, rejected writes, missing seasons, fixed plot scope, operator authentication, and confirmation mismatches.
-- Browser checks cover connected interactions, reload, errors, identical geometry and screenshot appearance, plus existing responsive/keyboard behavior in Chrome and WebKit.
-- The staging deployment was reapplied on 24 November 2026 at commit `00f3efee2c703f62904fc6cc20c3c7ea2e14827e`. Readiness returned `ready`; deployed documentation exposes both reused backend routes.
-- A local bridge reached deployed staging and propagated its expected 401 for an intentionally invalid owner session. No live stage write was made.
+- Production build passed.
+- Seven server HTTP tests passed, including Vercel route rewrites, parsed request bodies, oversized bodies, authentication and missing operator configuration.
+- All 26 Chrome/WebKit checks passed, including connected/static geometry and appearance, existing responsive layouts and keyboard use.
+- Diff checks passed; markup/CSS/artwork unchanged.
+- Vercel production deployment remains pending: the saved CLI login expired and the owner must approve fresh sign-in. Live hosted stage updates have not been verified.
 
-Live success remains unverified. As of 25 November 2026, table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` exists with paired AWD/gate devices and is the server startup default. It has no active season. Start its season, configure the owner session, then verify on the physical iPad. This PR does not deploy the iPad bridge or create backend records.
+## Rollout
+
+Link the existing Vercel project after sign-in; configure server-only variables and deploy the function alongside the built page. Verify an unauthenticated request gets an operator challenge, then an authenticated state read returns the configured plot/current season. Confirm a stage update and restore the original stage. No physical sensor interval or gate movement is claimed by this hosting change.
