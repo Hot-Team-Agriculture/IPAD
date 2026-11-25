@@ -9,6 +9,10 @@ const stages = new Set(Object.values(stageCodes));
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
+export function exhibitionOptionsFromEnv(env = process.env) {
+  return { backendURL: env.IPAD_BACKEND_URL, plotID: env.IPAD_PLOT_ID ?? '0a7d8b58-b085-4a47-9871-bb2e08be6738', ownerToken: env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: env.IPAD_OPERATOR_PASSWORD };
+}
+
 export function createExhibitionHandler({ backendURL, plotID, ownerToken, operatorPassword, directory = new URL('./dist/', import.meta.url) } = {}) {
   const upstream = backendURL ? new URL(backendURL) : null;
   if (upstream && (!['http:', 'https:'].includes(upstream.protocol) || upstream.username || upstream.password || upstream.pathname !== '/' || upstream.search || upstream.hash)) {
@@ -115,7 +119,7 @@ export function createExhibitionHandler({ backendURL, plotID, ownerToken, operat
       let contents;
       try { contents = await readFile(file); }
       catch { return json(res, 404, { error: 'Build the exhibition page before starting the server.' }); }
-      if (file === resolve(root, 'index.html')) contents = contents.toString().replace('<main ', '<main data-stage-endpoint="true" ');
+      if (file === resolve(root, 'index.html') && !contents.toString().includes('data-stage-endpoint="true"')) contents = contents.toString().replace('<main ', '<main data-stage-endpoint="true" ');
       res.writeHead(200, { 'Content-Type': types[extname(file)] });
       res.end(contents);
     } catch (error) {
@@ -131,6 +135,6 @@ export function createExhibitionServer(options) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const host = process.env.IPAD_HOST ?? '127.0.0.1';
   if (!['127.0.0.1', 'localhost', '::1'].includes(host) && !process.env.IPAD_OPERATOR_PASSWORD) throw new Error('Set IPAD_OPERATOR_PASSWORD before allowing network access.');
-  createExhibitionServer({ backendURL: process.env.IPAD_BACKEND_URL, plotID: process.env.IPAD_PLOT_ID ?? '0a7d8b58-b085-4a47-9871-bb2e08be6738', ownerToken: process.env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: process.env.IPAD_OPERATOR_PASSWORD })
+  createExhibitionServer(exhibitionOptionsFromEnv())
     .listen(Number(process.env.PORT ?? 4174), host, () => console.log('Sawir exhibition stage control is ready.'));
 }

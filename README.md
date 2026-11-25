@@ -34,6 +34,8 @@ Current status: the connected mode is implemented. Table plot `0a7d8b58-b085-4a4
 
 Start the table plot's season and configure its owner's session on the server before using connected mode. `IPAD_PLOT_ID` can override the default table plot when needed; no page or design changes are required. Leave the owner session server-side rather than hardcoding it in the browser.
 
+Latest upstream sync: `main` at `db04398` (PRs #3/#4) is integrated, including the centered watering instructions and native Vercel stage functions. Loading feedback and the protected hosted page are retained. Both Vercel adapters reuse the same request handler; already-connected build HTML is not marked twice.
+
 ### Deploy to Vercel
 
 The Vercel build serves the same design through `api/control.mjs`, which reuses the local bridge handler. `vercel.json` redirects `/` to `/stages`, then routes that page and the two stage API paths to the function; assets remain static. The redirect prevents Vercel's static `index.html` from taking precedence over the connected page. The page is marked as connected at request time. Vercel's parsed JSON bodies and ordinary Node request streams are both supported.
