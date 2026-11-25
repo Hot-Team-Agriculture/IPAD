@@ -27,4 +27,4 @@ No N+1, pagination, or unbounded collection issue identified. Selection scans fi
 - The staging deployment was reapplied on 24 November 2026 at commit `00f3efee2c703f62904fc6cc20c3c7ea2e14827e`. Readiness returned `ready`; deployed documentation exposes both reused backend routes.
 - A local bridge reached deployed staging and propagated its expected 401 for an intentionally invalid owner session. No live stage write was made.
 
-Live success remains unverified: the table has no plot or active season yet. Register/link the devices, create the plot and season, configure the owner session and plot ID, then verify on the physical iPad. This PR does not deploy the iPad bridge or create backend records.
+Live success remains unverified. As of 25 November 2026, table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` exists with paired AWD/gate devices and is the server startup default. It has no active season. Start its season, configure the owner session, then verify on the physical iPad. This PR does not deploy the iPad bridge or create backend records.

@@ -119,6 +119,6 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const host = process.env.IPAD_HOST ?? '127.0.0.1';
   if (!['127.0.0.1', 'localhost', '::1'].includes(host) && !process.env.IPAD_OPERATOR_PASSWORD) throw new Error('Set IPAD_OPERATOR_PASSWORD before allowing network access.');
-  createExhibitionServer({ backendURL: process.env.IPAD_BACKEND_URL, plotID: process.env.IPAD_PLOT_ID, ownerToken: process.env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: process.env.IPAD_OPERATOR_PASSWORD })
+  createExhibitionServer({ backendURL: process.env.IPAD_BACKEND_URL, plotID: process.env.IPAD_PLOT_ID ?? '0a7d8b58-b085-4a47-9871-bb2e08be6738', ownerToken: process.env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: process.env.IPAD_OPERATOR_PASSWORD })
     .listen(Number(process.env.PORT ?? 4174), host, () => console.log('Sawir exhibition stage control is ready.'));
 }

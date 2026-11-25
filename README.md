@@ -30,9 +30,9 @@ The `dist` folder is the deployable static website. All photos, styling, icons a
 
 ## Connected exhibition control
 
-Current status: the connected mode is implemented and can be verified against an HTTP test backend. On 24 November 2026 the deployed main database had hub/AWD/gate records but no plots, active crop cycles, water readings or gate commands. The AWD and gate were unpaired. Live table control is not commissioned yet.
+Current status: the connected mode is implemented and can be verified against an HTTP test backend. On 25 November 2026 the table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) exists on the deployed main backend with a paired AWD sensor and gate, but no active season. The bridge defaults to this plot. Live table control is not commissioned yet.
 
-The iPad wiring can be prepared before the plot exists. Once the table plot and its season are created, set `IPAD_PLOT_ID` on the server and restart it; no page or design changes are needed. Leave the owner session server-side rather than hardcoding it in the browser.
+Start the table plot's season and configure its owner's session on the server before using connected mode. `IPAD_PLOT_ID` can override the default table plot when needed; no page or design changes are required. Leave the owner session server-side rather than hardcoding it in the browser.
 
 The static `npm run dev` and `npm run preview` modes retain local-only selection. To control the table, build the same page and run the stage bridge:
 
@@ -47,7 +47,7 @@ Configure these **server-side process variables** before starting it. Do not pre
 | Variable | Purpose |
 | --- | --- |
 | `IPAD_BACKEND_URL` | Backend origin. Use HTTPS or an encrypted tunnel to a loopback HTTP origin. |
-| `IPAD_PLOT_ID` | The table's existing, owner-scoped plot UUID. |
+| `IPAD_PLOT_ID` | Optional override for the table plot; defaults to `0a7d8b58-b085-4a47-9871-bb2e08be6738`. |
 | `IPAD_OWNER_SESSION_TOKEN` | An existing owner Bearer session for that plot. Kept on the server. |
 | `IPAD_OPERATOR_PASSWORD` | Operator password; required when listening beyond loopback. The browser's native login uses username `exhibition`. |
 | `IPAD_HOST` | Defaults to `127.0.0.1`; use an appropriate network bind address for an iPad. |
