@@ -30,13 +30,13 @@ The `dist` folder is the deployable static website. All photos, styling, icons a
 
 ## Connected exhibition control
 
-Current status: the connected mode is implemented. Table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) has paired AWD/gate devices and active season `80a8cf85-6e16-4c9b-b7fa-b33bfca614ea`, started on 25 November 2026. The bridge defaults to this plot and resolves its current season from the backend. Local authenticated connectivity is verified. The Vercel adapter is tested locally; production deployment is pending Vercel sign-in.
+Current status: the connected mode is implemented. Table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) has paired AWD/gate devices and active season `80a8cf85-6e16-4c9b-b7fa-b33bfca614ea`, started on 25 November 2026. The bridge defaults to this plot and resolves its current season from the backend. Local authenticated connectivity is verified. The connected site is deployed separately under `andrian9` at https://sunrise-ipad-exhibition.vercel.app. Authenticated page/state reads and a hosted stage update were verified against the deployed backend; the original Flowering stage was restored. The earlier `ipad-jet-ten` deployment is unchanged. PR #2 remains unmerged because the available GitHub accounts lack merge permission.
 
 Start the table plot's season and configure its owner's session on the server before using connected mode. `IPAD_PLOT_ID` can override the default table plot when needed; no page or design changes are required. Leave the owner session server-side rather than hardcoding it in the browser.
 
 ### Deploy to Vercel
 
-The Vercel build serves the same design through `api/control.mjs`, which reuses the local bridge handler. `vercel.json` routes `/` and the two stage API paths to that function; assets remain static. The page is marked as connected at request time. Vercel's parsed JSON bodies and ordinary Node request streams are both supported.
+The Vercel build serves the same design through `api/control.mjs`, which reuses the local bridge handler. `vercel.json` redirects `/` to `/stages`, then routes that page and the two stage API paths to the function; assets remain static. The redirect prevents Vercel's static `index.html` from taking precedence over the connected page. The page is marked as connected at request time. Vercel's parsed JSON bodies and ordinary Node request streams are both supported.
 
 Set production variables `IPAD_BACKEND_URL`, `IPAD_OWNER_SESSION_TOKEN`, and `IPAD_OPERATOR_PASSWORD` in the existing Vercel project. `IPAD_PLOT_ID` is optional. The native browser login uses username `exhibition` and the configured operator password. Requests fail closed if operator access is not configured. No credential uses a `VITE_` prefix or enters the client bundle.
 

@@ -9,8 +9,11 @@
       "maxDuration": 60
     }
   },
+  "redirects": [
+    { "source": "/", "destination": "/stages", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/", "destination": "/api/control?route=page" },
+    { "source": "/stages", "destination": "/api/control?route=page" },
     { "source": "/api/exhibition/state", "destination": "/api/control?route=state" },
     { "source": "/api/exhibition/stage", "destination": "/api/control?route=stage" }
   ]
