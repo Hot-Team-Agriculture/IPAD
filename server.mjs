@@ -9,7 +9,16 @@ const stages = new Set(Object.values(stageCodes));
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
-export function createExhibitionServer({ backendURL, plotID, ownerToken, operatorPassword, directory = new URL('./dist/', import.meta.url) } = {}) {
+export function exhibitionOptionsFromEnv(env = process.env) {
+  return { backendURL: env.IPAD_BACKEND_URL, plotID: env.IPAD_PLOT_ID ?? '0a7d8b58-b085-4a47-9871-bb2e08be6738', ownerToken: env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: env.IPAD_OPERATOR_PASSWORD };
+}
+
+export function createExhibitionServer(options) {
+  return createServer(createExhibitionHandler(options));
+}
+
+// Node (req, res) handler shared by `npm start` and the Vercel Functions in api/.
+export function createExhibitionHandler({ backendURL, plotID, ownerToken, operatorPassword, directory = new URL('./dist/', import.meta.url) } = {}) {
   const upstream = backendURL ? new URL(backendURL) : null;
   if (upstream && (!['http:', 'https:'].includes(upstream.protocol) || upstream.username || upstream.password || upstream.pathname !== '/' || upstream.search || upstream.hash)) {
     throw new Error('IPAD_BACKEND_URL must be a backend origin without credentials or a path.');
@@ -53,7 +62,7 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
     return { plot_id: plotID, cycle_id: cycle.id, stage_code: stage };
   }
 
-  return createServer(async (req, res) => {
+  return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
@@ -113,12 +122,12 @@ export function createExhibitionServer({ backendURL, plotID, ownerToken, operato
     } catch (error) {
       json(res, error.status ?? 502, { error: error.status ? error.message : 'The backend did not confirm the stage. Check the connection and try again.' });
     }
-  });
+  };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const host = process.env.IPAD_HOST ?? '127.0.0.1';
   if (!['127.0.0.1', 'localhost', '::1'].includes(host) && !process.env.IPAD_OPERATOR_PASSWORD) throw new Error('Set IPAD_OPERATOR_PASSWORD before allowing network access.');
-  createExhibitionServer({ backendURL: process.env.IPAD_BACKEND_URL, plotID: process.env.IPAD_PLOT_ID ?? '0a7d8b58-b085-4a47-9871-bb2e08be6738', ownerToken: process.env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: process.env.IPAD_OPERATOR_PASSWORD })
+  createExhibitionServer(exhibitionOptionsFromEnv())
     .listen(Number(process.env.PORT ?? 4174), host, () => console.log('Sawir exhibition stage control is ready.'));
 }

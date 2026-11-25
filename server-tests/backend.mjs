@@ -33,7 +33,7 @@ export async function fixture(options = {}) {
   const backendURL = await listen(backend);
   const page = createExhibitionServer({ backendURL, plotID, ownerToken: 'test-owner-session', ...options });
   const url = await listen(page);
-  return { state, url, async close() {
+  return { state, url, backendURL, async close() {
     await Promise.all([page, backend].map(server => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); })));
   } };
 }
