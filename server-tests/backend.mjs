@@ -10,7 +10,7 @@ async function listen(server) {
 }
 
 export async function fixture(options = {}) {
-  const state = { stage: 'seedling', missingCycle: false, patchStatus: 200, readStatus: 200, ignorePatch: false, delay: 0, requests: [] };
+  const state = { stage: 'seedling', missingCycle: false, patchStatus: 200, readStatus: 200, ignorePatch: false, delay: 0, readDelay: 0, requests: [] };
   const backend = createServer(async (req, res) => {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
@@ -18,6 +18,7 @@ export async function fixture(options = {}) {
     state.requests.push({ path: req.url, method: req.method, authorization: req.headers.authorization, body });
     res.setHeader('Content-Type', 'application/json');
     if (req.method === 'GET' && req.url === '/api/v1/plots/' + plotID + '/water-level') {
+      if (state.readDelay) await new Promise(resolve => setTimeout(resolve, state.readDelay));
       res.statusCode = state.readStatus;
       return res.end(JSON.stringify({ crop_cycle: state.missingCycle ? null : { id: cycleID, plot_id: plotID, ended_at: null, applied_stage_code: state.stage }, crop_stage: { stage_code: state.stage } }));
     }

@@ -27,15 +27,35 @@ test('stage cards persist the correct stage to the configured cycle and restore 
 });
 
 test('pending writes keep the old selection and prevent duplicate stage requests', async ({ page }) => {
-  f.state.delay = 400;
+  f.state.delay = 800;
   await page.goto(f.url);
   const button = page.locator('[data-stage="vegetative"]');
   await expect(button).toBeEnabled();
   await button.click();
   await expect(button).toBeDisabled();
+  await expect(button).toHaveAttribute('aria-busy', 'true');
+  await expect(button.locator('.current-stage')).toHaveText('Updating…');
+  await expect(button).toHaveClass(/is-updating/);
   await expect(page.locator('[data-stage="seedling"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(button).toHaveAttribute('aria-pressed', 'true');
+  await expect(button).not.toHaveClass(/is-updating/);
+  await expect(button.locator('.current-stage')).toHaveText('Current Stage');
   expect(f.state.requests.filter(r => r.method === 'PATCH')).toHaveLength(1);
+});
+
+test('initial loading is visible while background refresh stays quiet', async ({ page }) => {
+  f.state.readDelay = 800;
+  await page.goto(f.url);
+  await expect(page.locator('#stage-announcement')).toHaveClass('loading-status');
+  await expect(page.locator('#stage-announcement')).toHaveText('Loading current stage…');
+  await expect(page.locator('[data-stage="seedling"]')).toBeDisabled();
+  await expect(page.locator('[data-stage="seedling"]')).toBeEnabled();
+  await expect(page.locator('#stage-announcement')).toHaveClass('sr-only');
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await expect(page.locator('.exhibition')).toHaveAttribute('aria-busy', 'true');
+  await expect(page.locator('.loading-status')).toHaveCount(0);
+  await expect(page.locator('.is-updating')).toHaveCount(0);
+  await expect(page.locator('.exhibition')).toHaveAttribute('aria-busy', 'false');
 });
 
 test('a backend rejection reports failure and retains the confirmed selection', async ({ page }) => {

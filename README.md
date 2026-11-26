@@ -30,9 +30,19 @@ The `dist` folder is the deployable static website. All photos, styling, icons a
 
 ## Connected exhibition control
 
-Current status: the connected mode is implemented and can be verified against an HTTP test backend. On 25 November 2026 the table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) exists on the deployed main backend with a paired AWD sensor and gate, but no active season. The bridge defaults to this plot. Live table control is not commissioned yet.
+Current status: the connected mode is implemented. Table plot `0a7d8b58-b085-4a47-9871-bb2e08be6738` (Plot 1) has paired AWD/gate devices and active season `80a8cf85-6e16-4c9b-b7fa-b33bfca614ea`, started on 25 November 2026. The bridge defaults to this plot and resolves its current season from the backend. Local authenticated connectivity is verified. The connected site is deployed separately under `andrian9` at https://sunrise-ipad-exhibition.vercel.app. Authenticated page/state reads and a hosted stage update were verified against the deployed backend; the original Flowering stage was restored. The earlier `ipad-jet-ten` deployment is unchanged. PR #2 remains unmerged because the available GitHub accounts lack merge permission.
 
 Start the table plot's season and configure its owner's session on the server before using connected mode. `IPAD_PLOT_ID` can override the default table plot when needed; no page or design changes are required. Leave the owner session server-side rather than hardcoding it in the browser.
+
+Latest upstream sync: `main` at `db04398` (PRs #3/#4) is integrated, including the centered watering instructions and native Vercel stage functions. Loading feedback and the protected hosted page are retained. Both Vercel adapters reuse the same request handler; already-connected build HTML is not marked twice.
+
+### Deploy to Vercel
+
+The Vercel build serves the same design through `api/control.mjs`, which reuses the local bridge handler. `vercel.json` redirects `/` to `/stages`, then routes that page and the two stage API paths to the function; assets remain static. The redirect prevents Vercel's static `index.html` from taking precedence over the connected page. The page is marked as connected at request time. Vercel's parsed JSON bodies and ordinary Node request streams are both supported.
+
+Set production variables `IPAD_BACKEND_URL`, `IPAD_OWNER_SESSION_TOKEN`, and `IPAD_OPERATOR_PASSWORD` in the existing Vercel project. `IPAD_PLOT_ID` is optional. The native browser login uses username `exhibition` and the configured operator password. Requests fail closed if operator access is not configured. No credential uses a `VITE_` prefix or enters the client bundle.
+
+Link the existing project with the Vercel CLI, add its server-side variables, then run `vercel deploy --prod`. An existing static-only deployment cannot call the backend until this function is deployed. Use an HTTPS backend origin for encrypted server-to-backend transport; an HTTPS Vercel URL does not encrypt requests to an HTTP backend origin. A temporary owner session must be replaced when it expires.
 
 The static `npm run dev` and `npm run preview` modes retain local-only selection. To control the table, build the same page and run the stage bridge:
 
@@ -55,7 +65,7 @@ Configure these **server-side process variables** before starting it. Do not pre
 
 For iPad access, place the bridge behind HTTPS (or use a trusted encrypted access path). The native browser login protects both the page and its stage controls. The owner session is never included in page HTML, JavaScript, browser storage or API responses. An expired owner session must be replaced on the server.
 
-The bridge serves the built page with connected mode enabled, preserving its existing artwork and CSS. It loads the configured plot's current stage, restores selection on reload, and refreshes every five seconds while visible. Tapping a card writes its mapped stage to the current open cycle and confirms the backend state before moving the selection. Requests are serialized in the page. A failure uses a native alert and reloads the authoritative state instead of claiming a successful update. Missing plot/season configuration leaves controls unavailable.
+The bridge serves the built page with connected mode enabled, preserving its idle layout and artwork. Initial loading shows a temporary “Loading current stage…” indicator; saving shows “Updating…” with a spinner in the tapped card’s existing badge. Background polling does not show a loading indicator. Both indicators disappear after completion or failure, and reduced-motion preferences stop the spinner animation. It loads the configured plot's current stage, restores selection on reload, and refreshes every five seconds while visible. Tapping a card writes its mapped stage to the current open cycle and confirms the backend state before moving the selection. Requests are serialized in the page. A failure uses a native alert and reloads the authoritative state instead of claiming a successful update. Missing plot/season configuration leaves controls unavailable.
 
 | Card | Backend `manual_stage_code` |
 | --- | --- |

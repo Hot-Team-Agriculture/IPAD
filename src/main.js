@@ -15,10 +15,21 @@ function select(stage) {
   if (stage) announcement.textContent = `${stage.querySelector('.stage-name').textContent} selected. ${stage.querySelector('.plan').innerText.replace(/\n/g, '. ')}.`;
 }
 
-function pending(value) {
+function pending(value, target = null) {
   busy = value;
   screen.setAttribute('aria-busy', String(value));
-  for (const card of stages) card.disabled = value || !ready;
+  const initial = value && !ready && !target;
+  announcement.classList.toggle('sr-only', !initial);
+  announcement.classList.toggle('loading-status', initial);
+  if (initial) announcement.textContent = 'Loading current stage…';
+  if (value && target) announcement.textContent = `Updating ${target.querySelector('.stage-name').textContent}…`;
+  for (const card of stages) {
+    const updating = value && card === target;
+    card.disabled = value || !ready;
+    card.classList.toggle('is-updating', updating);
+    card.setAttribute('aria-busy', String(updating));
+    card.querySelector('.current-stage').textContent = updating ? 'Updating…' : 'Current Stage';
+  }
 }
 
 async function request(method = 'GET', stage) {
@@ -50,7 +61,7 @@ for (const stage of stages) {
   stage.addEventListener('click', async () => {
     if (busy || !ready || stage.getAttribute('aria-pressed') === 'true') return;
     if (!connected) return select(stage);
-    pending(true);
+    pending(true, stage);
     try { await request('PATCH', stageCodes[stage.dataset.stage]); }
     catch (error) {
       // A lost response can follow a saved change; reload authoritative state.

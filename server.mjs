@@ -13,11 +13,6 @@ export function exhibitionOptionsFromEnv(env = process.env) {
   return { backendURL: env.IPAD_BACKEND_URL, plotID: env.IPAD_PLOT_ID ?? '0a7d8b58-b085-4a47-9871-bb2e08be6738', ownerToken: env.IPAD_OWNER_SESSION_TOKEN, operatorPassword: env.IPAD_OPERATOR_PASSWORD };
 }
 
-export function createExhibitionServer(options) {
-  return createServer(createExhibitionHandler(options));
-}
-
-// Node (req, res) handler shared by `npm start` and the Vercel Functions in api/.
 export function createExhibitionHandler({ backendURL, plotID, ownerToken, operatorPassword, directory = new URL('./dist/', import.meta.url) } = {}) {
   const upstream = backendURL ? new URL(backendURL) : null;
   if (upstream && (!['http:', 'https:'].includes(upstream.protocol) || upstream.username || upstream.password || upstream.pathname !== '/' || upstream.search || upstream.hash)) {
@@ -54,7 +49,7 @@ export function createExhibitionHandler({ backendURL, plotID, ownerToken, operat
   async function state() {
     const water = await api('plots/' + plotID + '/water-level');
     const cycle = water.crop_cycle;
-    const stage = water.crop_stage?.stage_code ?? cycle?.applied_stage_code ?? cycle?.manual_stage_code;
+    const stage = water.crop_stage?.code ?? water.crop_stage?.stage_code ?? cycle?.applied_stage_code ?? cycle?.manual_stage_code;
     if (!cycle || cycle.plot_id !== plotID || !uuid.test(cycle.id) || cycle.ended_at != null) {
       throw Object.assign(new Error('The table plot needs an active season before changing stages.'), { status: 409 });
     }
@@ -89,15 +84,23 @@ export function createExhibitionHandler({ backendURL, plotID, ownerToken, operat
             return json(res, 403, { error: 'Open the exhibition page directly.' });
           }
           if (req.headers['content-type']?.split(';')[0].trim() !== 'application/json') return json(res, 415, { error: 'A JSON stage is required.' });
-          const chunks = [];
-          let length = 0;
-          for await (const chunk of req) {
-            length += chunk.length;
-            if (length > 1024) return json(res, 413, { error: 'Request too large.' });
-            chunks.push(chunk);
+          let raw;
+          if (req.body !== undefined) {
+            // Vercel parses JSON before invoking the function.
+            raw = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+          } else {
+            const chunks = [];
+            let length = 0;
+            for await (const chunk of req) {
+              length += chunk.length;
+              if (length > 1024) return json(res, 413, { error: 'Request too large.' });
+              chunks.push(chunk);
+            }
+            raw = Buffer.concat(chunks).toString('utf8');
           }
+          if (Buffer.byteLength(raw) > 1024) return json(res, 413, { error: 'Request too large.' });
           let body;
-          try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+          try { body = JSON.parse(raw); }
           catch { return json(res, 400, { error: 'Invalid JSON.' }); }
           if (!body || Object.keys(body).length !== 1 || !stages.has(body.stage_code)) return json(res, 400, { error: 'Select one of the five crop stages.' });
           const current = await state();
@@ -116,13 +119,17 @@ export function createExhibitionHandler({ backendURL, plotID, ownerToken, operat
       let contents;
       try { contents = await readFile(file); }
       catch { return json(res, 404, { error: 'Build the exhibition page before starting the server.' }); }
-      if (file === resolve(root, 'index.html')) contents = contents.toString().replace('<main ', '<main data-stage-endpoint="true" ');
+      if (file === resolve(root, 'index.html') && !contents.toString().includes('data-stage-endpoint="true"')) contents = contents.toString().replace('<main ', '<main data-stage-endpoint="true" ');
       res.writeHead(200, { 'Content-Type': types[extname(file)] });
       res.end(contents);
     } catch (error) {
       json(res, error.status ?? 502, { error: error.status ? error.message : 'The backend did not confirm the stage. Check the connection and try again.' });
     }
   };
+}
+
+export function createExhibitionServer(options) {
+  return createServer(createExhibitionHandler(options));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
